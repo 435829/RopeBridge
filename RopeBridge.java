@@ -12,20 +12,55 @@ public class RopeBridge {
      * in passing the rope bridgeLeftSide
      **/
 
+    /**
+     * Variabele die regelt hoeveel personen er aangemaakt worden door het programma
+     */
     private static final int NR_OF_PEOPLE = 20;
+
+    /**
+     * Variabele die gebruikt wordt om de capaciteit van de brug mee te geven
+     */
     private static final int BRIDGE_CAPACITY = 3;
-    private static final int NR_OF_PEOPLE_ALLOWED_FROM_ONE_SIDE = 1;
+
+    /**
+     * Boolean die bijhoud of de brug bezet is vanaf de linkerkant
+     */
     private boolean acquiredBridgeLeft = false;
+
+    /**
+     * Boolean die bijhoud of de brug bezet is vanaf de rechterkant
+     */
     private boolean acquiredBridgeRight = false;
-    private int peopleWalkedOver = 0;
+
+    /**
+     * Variabele die bijhoud hoeveel mensen er op de brug aanwezig zijn
+     */
     private int personenOpBrug = 0;
+
+    /**
+     * Static variabele die gebruikt wordt om aan te geven vanaf welke kant iemand komt
+     */
     private static int LINKS = 1;
+
+    /**
+     * Static variabele die gebruikt wordt om aan te geven vanaf welke kant iemand komt
+     */
     private static int RECHTS = 2;
+
+    /**
+     * De synchronisatie punten die gebruikt zijn
+     */
     private Semaphore mutex, bridge, peopleOnBridge;
 
+    /**
+     * Array waar alle personen in worden opgeslagen
+     */
     private Person[] person = new Person[NR_OF_PEOPLE];
 
 
+    /**
+     * Constructor waar de synchronisatie punten en personen aangemaakt worden
+     */
     public RopeBridge() {
 
         // bridgeLeftSide semaphore heeft een maximum van 3 (BRIDGE_CAPACITY), er kunnen dus
@@ -43,6 +78,9 @@ public class RopeBridge {
 
     }
 
+    /**
+     * Thread voor een persoon, deze thread regelt alles van de brug en de personen
+     */
     class Person extends Thread {
 
         public Person(String name) {
@@ -61,6 +99,7 @@ public class RopeBridge {
                         if (!acquiredBridgeLeft) {
                             bridge.acquire();
                         }
+                        assert !acquiredBridgeRight : "Persons on other side of bridge";
                         acquiredBridgeLeft = true;
 
                         peopleOnBridge.acquire();
@@ -70,7 +109,7 @@ public class RopeBridge {
                         personenOpBrug++;
                         mutex.release();
 
-                        assert personenOpBrug <= 3 : "Too many people on bridge";
+                        assert personenOpBrug <= BRIDGE_CAPACITY : "Too many people on bridge";
 
                         walk();
 
@@ -95,6 +134,7 @@ public class RopeBridge {
                         if (!acquiredBridgeRight) {
                             bridge.acquire();
                         }
+                        assert !acquiredBridgeLeft : "Persons on other side of bridge";
                         acquiredBridgeRight = true;
 
                         peopleOnBridge.acquire();
@@ -104,7 +144,7 @@ public class RopeBridge {
                         personenOpBrug++;
                         mutex.release();
 
-                        assert personenOpBrug <= 3 : "Too many people on bridge";
+                        assert personenOpBrug <= BRIDGE_CAPACITY : "Too many people on bridge";
 
                         walk();
 
@@ -135,20 +175,25 @@ public class RopeBridge {
             }
         }
 
+        /**
+         * Methode om het lopen te simuleren qua tijd
+         */
         private void walk() {
             try {
                 System.out.println(getName() + " loopt over de brug");
                 Thread.sleep((int) (Math.random() *
-                        100));
+                        1000));
             } catch (InterruptedException e) {
             }
         }
 
-
+        /**
+         * Methode om het "leven" van de mensen te simuleren
+         */
         private void justLive() {
             try {
                 System.out.println(getName() + " working/getting education");
-                Thread.sleep((int) (Math.random() * 1000));
+                Thread.sleep((int) (Math.random() * 10000));
             } catch (InterruptedException e) {
             }
         }
